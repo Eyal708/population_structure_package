@@ -1,5 +1,5 @@
 Metadata-Version: 2.1
-Name: population_structure
+Name: population-structure
 Version: 0.0.1
 Summary: First version of the population_structure package published on PyPi.
 Author: Eyal Haluts
@@ -7,17 +7,14 @@ Author-email: eyal.haluts@mail.huji.ac.il
 Requires-Python: >=3.7
 Description-Content-Type: text/markdown
 License-File: LICENSE
-Requires-Dist: scipy
-Requires-Dist: importlib_resources
-Requires-Dist: numpy
 
 # Population Structure Package
-
 A package for performing transformation between fst, coalescence, and migration matrices.
 The transformation between coalescence and migration is based on Wilkinson-Herbot's equations (2003).
 The transformation between fst and coalescence is based on the Slatkin's equations (2001).
-
-Example usage:
+## Install package using pip
+pip install population-structure
+## Example usuage
 ```python
 import population_structure.utils as psu
 import numpy as np

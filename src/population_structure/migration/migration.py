@@ -1,7 +1,10 @@
 import numpy as np
-from ..helper_funcs.helper_funcs import comb as comb
 from importlib_resources import files
 import ctypes
+import platform
+import warnings
+from ..helper_funcs.helper_funcs import comb as comb
+from ..user_messages import OS_NOT_SUPPORTED_MSG, ERROR_LOADING_LIB_MSG
 
 
 class Migration:
@@ -18,39 +21,43 @@ class Migration:
         self.matrix = matrix.astype(float)
         self.shape = matrix.shape[0]
         self.lib = None
+        self.library_loaded = False
 
     def load_c_library(self) -> None:
         """
         Loads the C library that calculates the coefficient matrix.
         """
-        lib = ctypes.cdll.LoadLibrary(str(files('population_structure.data').joinpath('libmigration_noGSL.dll')))
+        if self.library_loaded:
+            return
+        path_to_lib = files('population_structure.data')
+        if platform.system().startswith("win32"):  # OS is Windows, use .dll file:
+            path_to_lib.joinpath('libmigration_noGSL.dll')
+        elif platform.system().startswith("linux"):  # OS is Linux, use .so file:
+            path_to_lib.joinpath('libmigration.so')
+        else:  # No other Os is supported, warn the user that the less efficient method will be used.
+            warnings.warn(OS_NOT_SUPPORTED_MSG, RuntimeWarning)
+            return
+        try:
+            lib = ctypes.cdll.LoadLibrary(str(path_to_lib))
+        except Exception as e:
+            warnings.warn(ERROR_LOADING_LIB_MSG + str(e), RuntimeWarning)
+            return
         lib.coefficient_matrix_from_migration.restype = ctypes.POINTER(ctypes.c_double)
         lib.coefficient_matrix_from_migration.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.c_int]
         self.lib = lib
-
-    def produce_coalescence_old(self) -> np.ndarray:
-        """
-        produces and returns the corresponding coalescence matrix. This is the old method that doesn't use the
-        coefficient_matrix_from_migration_wrapper method, which means it is less efficient.
-        :return: The corresponding coalescence matrix
-        """
-        A = self.produce_coefficient_matrix()
-        b = self.produce_solution_vector()
-        x = np.linalg.solve(A, b)
-        T_mat = np.zeros((self.shape, self.shape))
-        # Assign values from x to T_mat using the upper triangular indices
-        i, j = np.triu_indices(self.shape)
-        T_mat[i, j] = x
-        T_mat[j, i] = x
-        return T_mat
+        self.library_loaded = True
 
     def produce_coalescence(self) -> np.ndarray:
         """
-        produces and returns the corresponding coalescence matrix. This is the efficient method that uses the
-        coefficient_matrix_from_migration_wrapper method (runs in C).
+        produces and returns the corresponding coalescence matrix. If Os is not supported,
+        the less efficient method that doesn't use the C function will be used.
         :return: The corresponding coalescence matrix
         """
-        A = self.coefficient_matrix_from_migration_wrapper()
+        self.load_c_library()
+        if self.library_loaded:  # If the library was loaded, use the C function to calculate the coefficient matrix
+            A = self.coefficient_matrix_from_migration_wrapper()
+        else:  # If the library was not loaded, use the old method that doesn't use the C function
+            A = self.produce_coefficient_matrix()
         b = self.produce_solution_vector()
         x = np.linalg.solve(A, b)
         T_mat = np.zeros((self.shape, self.shape))
@@ -64,7 +71,6 @@ class Migration:
         Wrapper for the C function that calculates the coefficient matrix from the migration matrix.
         :return: the coefficient matrix corresponding to the migration matrix.
         """
-        self.load_c_library()  # load the C library
         n = self.shape
         mat_size = n + (n * (n - 1)) // 2  # size of the coefficient matrix
         migration_matrix_c = self.matrix.flatten().ctypes.data_as(ctypes.POINTER(ctypes.c_double))
