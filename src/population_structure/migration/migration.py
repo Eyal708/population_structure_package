@@ -1,7 +1,7 @@
 import numpy as np
 from importlib_resources import files
 import ctypes
-import platform
+import sys
 import warnings
 from ..helper_funcs.helper_funcs import comb as comb
 from ..user_messages import OS_NOT_SUPPORTED_MSG, ERROR_LOADING_LIB_MSG
@@ -30,10 +30,10 @@ class Migration:
         if self.library_loaded:
             return
         path_to_lib = files('population_structure.data')
-        if platform.system().startswith("win32"):  # OS is Windows, use .dll file:
-            path_to_lib.joinpath('libmigration_noGSL.dll')
-        elif platform.system().startswith("linux"):  # OS is Linux, use .so file:
-            path_to_lib.joinpath('libmigration.so')
+        if sys.platform.startswith("win32"):  # OS is Windows, use .dll file:
+            path_to_lib = path_to_lib.joinpath('libmigration_noGSL.dll')
+        elif sys.platform.startswith("linux"):  # OS is Linux, use .so file:
+            path_to_lib = path_to_lib.joinpath('libmigration.so')
         else:  # No other Os is supported, warn the user that the less efficient method will be used.
             warnings.warn(OS_NOT_SUPPORTED_MSG, RuntimeWarning)
             return

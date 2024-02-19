@@ -2,6 +2,7 @@ LICENSE
 README.md
 setup.py
 src/population_structure/__init__.py
+src/population_structure/user_messages.py
 src/population_structure/utils.py
 src/population_structure.egg-info/PKG-INFO
 src/population_structure.egg-info/SOURCES.txt

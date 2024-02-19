@@ -2,10 +2,12 @@ from setuptools import setup, find_namespace_packages
 
 setup(
     name='population_structure',
-    version='0.0.1',
+    version='0.0.4',
     author='Eyal Haluts',
     author_email='eyal.haluts@mail.huji.ac.il',
-    description='First version of the population_structure package published on PyPi.',
+    description='This version contains some changes so the C library used in the Migration class  '
+                'is loaded correctly for Windows/Linux and that the code works in case the '
+                'loading of the library fails (uses the less efficient pure python function).',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
     python_requires='>=3.7',

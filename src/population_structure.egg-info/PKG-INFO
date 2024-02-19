@@ -1,7 +1,7 @@
 Metadata-Version: 2.1
 Name: population-structure
-Version: 0.0.1
-Summary: First version of the population_structure package published on PyPi.
+Version: 0.0.4
+Summary: This version contains some changes so the C library used in the Migration class  is loaded correctly for Windows/Linux and that the code works in case the loading of the library fails (uses the less efficient pure python function).
 Author: Eyal Haluts
 Author-email: eyal.haluts@mail.huji.ac.il
 Requires-Python: >=3.7
