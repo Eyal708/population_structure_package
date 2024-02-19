@@ -1,0 +1,8 @@
+LICENSE
+README.md
+setup.py
+population_structure.egg-info/PKG-INFO
+population_structure.egg-info/SOURCES.txt
+population_structure.egg-info/dependency_links.txt
+population_structure.egg-info/requires.txt
+population_structure.egg-info/top_level.txt

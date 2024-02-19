@@ -1,0 +1,16 @@
+Metadata-Version: 2.1
+Name: population_structure
+Version: 0.1.6
+Summary: Uses setup.py and toml file to create a package for population structure analysis.
+Author: Eyal Haluts
+Author-email: eyal.haluts@mail.huji.ac.il
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: scipy
+
+# Coalescence Package
+
+A package for performing transformation between fst, coalescence, and migration matrices.
+The transformation between coalescence and migration is based on Wilkinson-Herbot's equations (2003).
+The transformation between fst and coalescence is based on the Slatkin's equations (2001).

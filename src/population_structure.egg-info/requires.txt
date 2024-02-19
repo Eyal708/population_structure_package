@@ -1,0 +1,3 @@
+scipy
+importlib_resources
+numpy
