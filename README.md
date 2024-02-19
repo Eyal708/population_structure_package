@@ -1,10 +1,10 @@
 # Population Structure Package
-
 A package for performing transformation between fst, coalescence, and migration matrices.
 The transformation between coalescence and migration is based on Wilkinson-Herbot's equations (2003).
 The transformation between fst and coalescence is based on the Slatkin's equations (2001).
-
-Example usage:
+## Install package using pip
+pip install population-structure
+## Example usuage
 ```python
 import population_structure.utils as psu
 import numpy as np
