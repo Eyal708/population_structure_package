@@ -98,7 +98,7 @@ def cons_migration_constraint_generator(n: int, i: int) -> callable:
         mask = indices[:, 0] != indices[:, 1]  # Off-diagonal mask
         m = np.zeros((n, n))
         m[tuple(indices[mask].T)] = m_values
-        return np.sum(m[i, :]).round(2) - np.sum(m[:, i]).round(2)
+        return np.sum(m[i, :]) - np.sum(m[:, i])
 
     return constraint
 

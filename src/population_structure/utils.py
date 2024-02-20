@@ -112,8 +112,10 @@ def f_to_t(f: np.ndarray, x0=None, constraint=False, bounds=(0, np.inf)) -> tupl
 
 def f_to_m(f: np.ndarray, x0=None, constraint=False, bounds_t=(0, np.inf), bounds_m=(0, 2), indirect=True) -> tuple:
     """
-    Receives an Fst matrix and returns a possible corresponding migration matrix. This approach uses the
-    intermediate step of finding the coalescence matrix and then finding the migration matrix.
+    Receives an Fst matrix and returns a possible corresponding migration matrix.
+    Two approaches are available: the indirect approach, which first finds the coalescence matrix and then
+    finds the corresponding migration matrix, and the direct approach, which finds the migration matrix
+    directly from the Fst matrix.
     :param f: Fst matrix - squared, symmetric with values in range (0,1) matrix with zeroes on the diagonal.
     :param x0: initial guess for the variables, default is a random vector with bounds (0,2*n), where n is the
                size of the matrix (number of populations).

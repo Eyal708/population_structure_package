@@ -27,9 +27,9 @@ class Fst:
         :param x0: initial guess for the variables, default is a random vector with bounds (0,2*n), where n is the
                    size of the matrix (number of populations).
         :param constraint: indicated whether the T matrix produced should be 'good'. default is False
-        :param bounds: bounds for each variable T(i,j), default is (0, inf). bounds should be a tuple of two arrays,
-                       first is lower bounds for each variable, second is upper bounds for each variable.
-                       If bounds is a tuple of two scalars, the same bounds are applied for each variable.
+        :param bounds: bounds for each variable T(i,j), default is (0, inf). bounds should be an array of tuples, each
+                       is (min, max) pair of the corresponding variable. If bounds is a tuple of two scalars,
+                       the same bounds are applied for each variable.
         :return: A tuple: (A possible corresponding Coalescence time matrix- T, details about
                           the solution of the numerical solver).
         """
@@ -61,15 +61,13 @@ class Fst:
         T[(col_indices, row_indices)] = x[0:nc2]
         return T, solution
 
-    def produce_migration(self, x0=None, bounds=(0, np.inf), conservative=True) -> tuple:
+    def produce_migration(self, x0=None, bounds=(0, 2), conservative=True) -> tuple:
         """
         produces and returns the migration matrix induced by the Fst matrix, using a numerical solver.
         This is a direct approach where the migration matrix is produced directly from the Fst matrix, without the
         intermediate step of producing the coalescence matrix.
-        :param x0: Startin poitn for the numerical solver. if None, a random vector is generated.
-        :param bounds: bounds for each unknown migration value. default is (0, inf). bounds should be a tuple of two
-                       or a list of two arrays, first is lower bounds for each variable,
-                       second is upper bounds for each variable.
+        :param x0: Starting point for the numerical solver. if None, a random vector with bounds (0 ,2n) is used.
+        :param bounds: bounds for each unknown migration value. Should ba tuple of two scalars, default is (0, inf).
         :param conservative:  Indicates whether the migration matrix should be conservative. default is True. This
                               does not guarantee that the migration matrix will be conservative!
         :return: A tuple (matrix, solution).
@@ -78,7 +76,7 @@ class Fst:
         """
         n, nc2 = self.shape, comb(self.shape, 2)
         if x0 is None:
-            x0 = np.random.uniform(low=-2, high=2, size=(n ** 2,))
+            x0 = np.random.uniform(low=0, high=2 * n, size=(n ** 2,))
         M = np.zeros((n, n))
         f_values = self.matrix.flatten()
         constraints = None
