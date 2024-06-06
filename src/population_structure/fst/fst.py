@@ -26,7 +26,7 @@ class Fst:
         Solves Slatkin's equations using a numerical solver.
         :param x0: initial guess for the variables, default is a random vector with bounds (0,2*n), where n is the
                    size of the matrix (number of populations).
-        :param constraint: indicated whether the T matrix produced should be 'good'. default is False
+        :param constraint: indicated whether the T matrix produced should be 'compliant'. default is False
         :param bounds: bounds for each variable T(i,j), default is (0, inf). bounds should be an array of tuples, each
                        is (min, max) pair of the corresponding variable. If bounds is a tuple of two scalars,
                        the same bounds are applied for each variable.
@@ -61,7 +61,7 @@ class Fst:
         T[(col_indices, row_indices)] = x[0:nc2]
         return T, solution
 
-    def produce_migration(self, x0=None, bounds=(0, 2), conservative=True) -> tuple:
+    def produce_migration(self, x0=None, bounds=(0, np.inf), conservative=True) -> tuple:
         """
         produces and returns the migration matrix induced by the Fst matrix, using a numerical solver.
         This is a direct approach where the migration matrix is produced directly from the Fst matrix, without the

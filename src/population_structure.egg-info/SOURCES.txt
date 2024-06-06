@@ -11,6 +11,7 @@ src/population_structure.egg-info/requires.txt
 src/population_structure.egg-info/top_level.txt
 src/population_structure/coalescence/__init__.py
 src/population_structure/coalescence/coalescence.py
+src/population_structure/data/libmigration.so
 src/population_structure/data/libmigration_noGSL.dll
 src/population_structure/fst/__init__.py
 src/population_structure/fst/fst.py
