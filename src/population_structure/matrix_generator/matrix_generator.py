@@ -1,4 +1,4 @@
-from migration import Migration
+from ..migration.migration import Migration
 from ..coalescence.coalescence import Coalescence
 import numpy as np
 import scipy as sp

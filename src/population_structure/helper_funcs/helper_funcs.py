@@ -126,9 +126,9 @@ def check_conservative(m: np.ndarray):
     return True
 
 
-def matrix_distance(a: np.ndarray, b: np.ndarray) -> float:
+def migration_matrix_distance(a: np.ndarray, b: np.ndarray) -> float:
     """
-    Calculates the distance between two matrices. Matrices must be of the same shape.
+    Calculates the distance between two migration matrices. Matrices must be of the same shape.
     :param a: first matrix.
     :param b: second matrix.
     :return: The distance between a and b.
@@ -136,6 +136,16 @@ def matrix_distance(a: np.ndarray, b: np.ndarray) -> float:
     n = a.shape[0]
     c = np.abs(a - b)
     return float(np.sum(c)) / (n ** 2 - n)
+
+
+def fst_matrix_distance(a: np.ndarray, b: np.ndarray) -> float:
+    """
+    Calculates the distance between two Fst matrices. Matrices must be of the same shape.
+    :param a: first matrix.
+    :param b: second matrix.
+    :return: The distance between a and b.
+    """
+    return float((np.sum(np.abs(np.triu(a, 1) - np.triu(b, 1)))) / comb(a.shape[0], 2))
 
 
 def diameter(mats: list) -> float:
@@ -147,7 +157,7 @@ def diameter(mats: list) -> float:
     max_diam = 0
     for i in range(len(mats)):
         for j in range(i):
-            max_diam = max(max_diam, matrix_distance(mats[i], mats[j]))
+            max_diam = max(max_diam, migration_matrix_distance(mats[i], mats[j]))
     return max_diam
 
 

@@ -99,7 +99,7 @@ def f_to_t(f: np.ndarray, x0=None, constraint=False, bounds=(0, np.inf)) -> tupl
     :param f: Fst matrix - squared, symmetric with values in range (0,1) matrix with zeroes on the diagonal.
     :param x0: initial guess for the variables, default is a random vector with bounds (0,2*n), where n is the
                size of the matrix (number of populations).
-    :param constraint: indicated whether the T matrix produced should be 'good'. default is False
+    :param constraint: indicated whether the T matrix produced should be 'compliant'. default is False
     :param bounds: bounds for each variable T(i,j), default is (0, inf). bounds should be a tuple of two arrays,
                   first is lower bounds for each variable, second is upper bounds for each variable.
                   If bounds is a tuple of two scalars, the same bounds are applied for each variable.
@@ -119,15 +119,16 @@ def f_to_m(f: np.ndarray, x0=None, constraint=False, bounds_t=(0, np.inf), bound
     :param f: Fst matrix - squared, symmetric with values in range (0,1) matrix with zeroes on the diagonal.
     :param x0: initial guess for the variables, default is a random vector with bounds (0,2*n), where n is the
                size of the matrix (number of populations).
-    :param constraint: indicated whether the T matrix produced should be 'good'. default is False
+    :param constraint: indicated whether the T matrix produced should be 'compliant'. default is False. This is only
+                       relevant when using the indirect approach (indirect=True).
     :param bounds_t: bounds for each variable T(i,j), default is (0, inf). bounds should be a tuple of two arrays,
                      first is lower bounds for each variable, second is upper bounds for each variable.
                      If bounds is a tuple of  two scalars, the same bounds are applied for each variable.
                      This is relevant when using the indirect approach.
-    :param bounds_m: bounds for each individual variable. default is 0 < x < 2. bounds should be given as a tuple
+    :param bounds_m: bounds for each individual variable. default is (0,2). bounds should be given as a tuple
                     of 2 arrays of size n**2-n (where n is the number of populations).
                     first array represents lower bounds, second array represents upper bounds. if a tuple with 2 scalars
-                     is given instead, they will be the bounds for each variable.
+                    is given instead, they will be the bounds for each variable.
     :param indirect: indicates whether to use the indirect approach of finding the coalescence matrix first, or the
                      direct approach of finding the migration matrix directly from the Fst matrix. default is True.
     :return: A tuple: first element is a possible corresponding migration matrix, second element is details about
