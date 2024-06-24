@@ -1,5 +1,6 @@
 import math
 import numpy as np
+import scipy as sp
 from collections import deque
 
 
@@ -255,3 +256,50 @@ def reassemble_matrix(sub_matrices: list, connected_components: list, which: str
         adjacency_matrix[np.ix_(indices, indices)] = sub_matrix
 
     return adjacency_matrix
+
+
+def conservative_migration_from_binary_matrix(binary_m: np.ndarray, bounds: tuple = (0, 2), lls=True) -> np.ndarray:
+    """
+    Given a binary matrix, generate a conservative migration matrix with the same structure,
+    but with values in bounds. This function uses a linear least squares approach to generate the conservative matrix.
+    :param binary_m: binary migration matrix.
+    :param bounds: bounds for each variable in the migration matrix
+    :param lls: whether to use linear least squares to generate the conservative matrix. if False,
+                scipy.optimize.minimize is used.
+    :return: conservative migration matrix with the same structure as m, but with values in bounds.
+             Same structure means tha returned matrix would have values > 0 where m has values > 0 (1), and 0
+             where m has 0. Conservative means that for each i = 1, ..., n, the sum of the ith row of
+             the returned matrix is equal to the sum of the ith column of the returned matrix.
+    :error: if the matrix is not binary, ValueError is raised.
+    """
+    # if m is not binary, raise an error
+    if not np.array_equal(binary_m, binary_m.astype(bool)):
+        raise ValueError("Matrix is not binary.")
+    # get the indices of the non-zero elements of m
+    non_zero_indices = np.argwhere(binary_m)
+    num_unknowns = non_zero_indices.shape[0]
+    result_matrix = np.zeros(binary_m.shape)
+    # build the matrix A and the vector b
+    A = np.zeros((binary_m.shape[0], num_unknowns))
+    b = np.zeros(binary_m.shape[0])
+    for i in range(binary_m.shape[0]):
+        for j in range(non_zero_indices.shape[0]):
+            if non_zero_indices[j, 0] == i:
+                A[i, j] = 1
+            elif non_zero_indices[j, 1] == i:
+                A[i, j] = -1
+    if lls:
+        ls_sol = sp.optimize.lsq_linear(A, b, bounds=bounds)
+        solution = ls_sol.x
+    else:
+        x0 = np.random.uniform(bounds[0], bounds[1], num_unknowns)
+
+        def obj_func(x):
+            return np.linalg.norm(np.dot(A, x) - b)
+
+        # build the constraints
+        minimize_sol = sp.optimize.minimize(obj_func, x0=x0, bounds=[bounds] * num_unknowns)
+        solution = minimize_sol.x
+    # put the values of x in result_matrix according to the non_zero_indices
+    result_matrix[non_zero_indices[:, 0], non_zero_indices[:, 1]] = solution
+    return result_matrix

@@ -2,13 +2,12 @@ from setuptools import setup, find_namespace_packages
 
 setup(
     name='population_structure',
-    version='0.0.9',
+    version='1.0.0',
     author='Eyal Haluts',
     author_email='eyal.haluts@mail.huji.ac.il',
-    description='Fixed a syntax error in matrix_generator.py imports which made it crash. Also added a function'
-                'in helper_funcs.py to calculate the average distance between two Fst matrices, and changed'
-                'the name of the function matrix_distance to migration_matrix_distance (as it actually'
-                'calculated distance between migration two matrices).',
+    description='Added the function conservative_migration_from_binary_matrix to the helper_funcs module.'
+                'This function generates a conservative migration matrix from a binary migration matrix'
+                '(See documentation for more details).',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
     python_requires='>=3.7',
