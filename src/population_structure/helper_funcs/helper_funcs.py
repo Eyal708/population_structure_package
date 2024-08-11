@@ -267,7 +267,7 @@ def conservative_migration_from_binary_matrix(binary_m: np.ndarray, bounds: tupl
     :param lls: whether to use linear least squares to generate the conservative matrix. if False,
                 scipy.optimize.minimize is used.
     :return: conservative migration matrix with the same structure as m, but with values in bounds.
-             Same structure means tha returned matrix would have values > 0 where m has values > 0 (1), and 0
+             Same structure means the returned matrix would have values > 0 where m has values > 0 (1), and 0
              where m has 0. Conservative means that for each i = 1, ..., n, the sum of the ith row of
              the returned matrix is equal to the sum of the ith column of the returned matrix.
     :error: if the matrix is not binary, ValueError is raised.
@@ -279,6 +279,7 @@ def conservative_migration_from_binary_matrix(binary_m: np.ndarray, bounds: tupl
     non_zero_indices = np.argwhere(binary_m)
     num_unknowns = non_zero_indices.shape[0]
     result_matrix = np.zeros(binary_m.shape)
+    solution = None
     # build the matrix A and the vector b
     A = np.zeros((binary_m.shape[0], num_unknowns))
     b = np.zeros(binary_m.shape[0])
@@ -291,15 +292,18 @@ def conservative_migration_from_binary_matrix(binary_m: np.ndarray, bounds: tupl
     if lls:
         ls_sol = sp.optimize.lsq_linear(A, b, bounds=bounds)
         solution = ls_sol.x
-    else:
-        x0 = np.random.uniform(bounds[0], bounds[1], num_unknowns)
 
+    else:
         def obj_func(x):
             return np.linalg.norm(np.dot(A, x) - b)
 
-        # build the constraints
-        minimize_sol = sp.optimize.minimize(obj_func, x0=x0, bounds=[bounds] * num_unknowns)
-        solution = minimize_sol.x
+        while True:
+            x0 = np.random.uniform(bounds[0], bounds[1], num_unknowns)
+            minimize_sol = sp.optimize.minimize(obj_func, x0=x0, bounds=[bounds] * num_unknowns)
+            solution = minimize_sol.x
+            result_matrix[non_zero_indices[:, 0], non_zero_indices[:, 1]] = solution
+            if not np.any(solution <= 0) and check_conservative(result_matrix):
+                break
     # put the values of x in result_matrix according to the non_zero_indices
     result_matrix[non_zero_indices[:, 0], non_zero_indices[:, 1]] = solution
     return result_matrix
