@@ -71,23 +71,17 @@ class Fst:
         :param conservative:  Indicates whether the migration matrix should be conservative. default is True. This
                               does not guarantee that the migration matrix will be conservative!
         :return: A tuple (matrix, solution).
-        One possible corresponding migration matrix, according to W.H and Slatkin's equations, and details
-        about the solution of the numerical solver.
+                One possible corresponding migration matrix, according to W.H and Slatkin's equations, and details
+                about the solution of the numerical solver.
         """
         n, nc2 = self.shape, comb(self.shape, 2)
         if x0 is None:
             x0 = np.random.uniform(low=0, high=2 * n, size=(n ** 2,))
         M = np.zeros((n, n))
         f_values = self.matrix.flatten()
-        constraints = None
-        if conservative:
-            constraints = []
-            for i in range(n):
-                constraint = cons_migration_constraint_generator(n, i)
-                constraints.append({"type": "eq", "fun": constraint})
         bnds = (n ** 2 - n) * [(bounds[0], bounds[1])] + n * [(0, np.inf)]
-        solution = minimize(f_to_m, x0=x0, args=(f_values, n), method="SLSQP",
-                            bounds=bnds, constraints=constraints)
+        solution = minimize(f_to_m, x0=x0, args=(f_values, n, conservative), method="SLSQP",
+                            bounds=bnds)
         x = solution.x
         for i in range(n):
             start_ind = i * (n - 1)

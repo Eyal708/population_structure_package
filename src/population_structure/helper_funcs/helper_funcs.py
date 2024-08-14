@@ -33,20 +33,25 @@ def compute_coalescence(t: np.ndarray, f: np.ndarray, n: int) -> float:
             eq = t[k] - (0.5 * (t[nC2 + i] + t[nC2 + j]) * ((1 + f[k]) / (1 - f[k])))
             eqs_lst.append(eq)
             k += 1
-    return np.linalg.norm(eqs_lst)
+    return float(np.linalg.norm(eqs_lst))
 
 
-def f_to_m(u: np.ndarray, f: np.ndarray, n: int) -> float:
+def f_to_m(u: np.ndarray, f: np.ndarray, n: int, conservative=True) -> float:
     """
-    Function to minimize in order to solve F->M directly (Xiran's paper).
+    Function to minimize in order to solve F->M directly, including conservative migration constraints (Xiran's paper).
     :param f: vector of Fst values (parameters) of size nC2.
     :param u: vector of unknown T and M values of size n^2.
     :param n: number of populations.
+    :param conservative: whether to add conservative migration constraints.
     :return: value of function at point u.
     """
     equation_lst = []
     m = u[:n ** 2 - n]  # M values
     t = u[n ** 2 - n:]  # T values
+    indices = np.vstack(np.indices((n, n))).reshape(2, -1).T
+    mask = indices[:, 0] != indices[:, 1]  # Off-diagonal mask
+    m_matrix = np.zeros((n, n))
+    m_matrix[tuple(indices[mask].T)] = m
     for i in range(n):
         incoming_migrants_i = m[(n - 1) * i: (n - 1) * i + n - 1]  # only unknowns of kind M_{i,k}
         m_i = np.sum(incoming_migrants_i)
@@ -69,7 +74,9 @@ def f_to_m(u: np.ndarray, f: np.ndarray, n: int) -> float:
             equation_lst.append(0.25 * (((m_i + m_j) * (t[i] + t[j]) * ((1 + f[(n * i + j)]) / (1 - f[(n * i + j)]))) -
                                         (incoming_migrants_i @ ((other_t + t[j]) * f_j_vector))
                                         - (incoming_migrants_j @ ((t_vals_no_j + t[i]) * f_i_new_vector))) - 1)
-    return np.linalg.norm(equation_lst)
+        if conservative:  # add conservative migration constraint for row i
+            equation_lst.append(np.sum(m_matrix[i, :]).round(2) - np.sum(m_matrix[:, i]).round(2))
+    return float(np.linalg.norm(equation_lst))
 
 
 def constraint_generator(i: int, j: int) -> callable:
@@ -99,7 +106,11 @@ def cons_migration_constraint_generator(n: int, i: int) -> callable:
         mask = indices[:, 0] != indices[:, 1]  # Off-diagonal mask
         m = np.zeros((n, n))
         m[tuple(indices[mask].T)] = m_values
-        return np.sum(m[i, :]) - np.sum(m[:, i])
+        vec = []
+        for j in range(n):
+            vec.append(np.sum(m[j, :]).round(2) - np.sum(m[:, j]).round(2))
+        return np.linalg.norm(vec)
+        # return np.sum(m[i, :]).round(2) - np.sum(m[:, i]).round(2)
 
     return constraint
 
@@ -172,11 +183,12 @@ def matrix_mean(mats: list) -> np.ndarray:
     return np.sum(mats, axis=0) / len(mats)
 
 
-def find_components(matrix: np.ndarray) -> dict:
+def find_components(matrix: np.ndarray) -> dict[int, list[int]]:
     """
     Find connected components in a directed graph represented by adjacency matrix.
     :param matrix: adjacency matrix representing a directed graph
-    :return:something
+    :return: A dictionary where the keys are the connected components' indices and the values are lists of the vertices
+            in the connected component.
     """
     components = 1
     n = matrix.shape[0]
@@ -212,7 +224,8 @@ def split_migration_matrix(migration_matrix: np.ndarray, connected_components: l
     :param connected_components: list of lists, where each list represents a connected component's vertices
                                 (populations).
     :return: A list of sub-matrices, where each sun-matrix is the migration matrix of a connected component. Note that
-    in order to interpret which populations are described in each sub matrix the connected components list is needed.
+             in order to interpret which populations are described in each sub-matrix the connected components list
+             is needed.
     """
     sub_matrices = []
     for component in connected_components:
@@ -235,18 +248,18 @@ def split_migration(migration_matrix: np.ndarray) -> tuple:
     return sub_matrices, components
 
 
-def reassemble_matrix(sub_matrices: list, connected_components: list, which: str) -> np.ndarray:
+def reassemble_matrix(sub_matrices: list, connected_components: list, matrix_type: str) -> np.ndarray:
     """
     Reassembles an Fst/Coalescence matrix according to sub-matrices and the connected components.
     :param sub_matrices: The sub matrices from which to assemble the matrix. A list of 2-D numpy arrays.
-    :param connected_components: A list of lists, where each list is the connected components. Inidcates how the matrix
+    :param connected_components: A list of lists, where each list is the connected components. Indicates how the matrix
                                  should be assembled.
-    :param which: Either "fst" or "coalescence". Indicated whether the assembled matrix is an Fst matrix or a
+    :param matrix_type: Either "fst" or "coalescence". Indicates whether the assembled matrix is an Fst matrix or a
                   coalescence matrix. This is important for initialization of the returned matrix.
     :return: The assembled Fst or Coalescence matrix.
     """
     num_nodes = sum(len(component) for component in connected_components)
-    if which == "fst":
+    if matrix_type == "fst":
         adjacency_matrix = np.ones((num_nodes, num_nodes), dtype=float)
     else:
         adjacency_matrix = np.full((num_nodes, num_nodes), np.inf)
@@ -267,7 +280,7 @@ def conservative_migration_from_binary_matrix(binary_m: np.ndarray, bounds: tupl
     :param lls: whether to use linear least squares to generate the conservative matrix. if False,
                 scipy.optimize.minimize is used.
     :return: conservative migration matrix with the same structure as m, but with values in bounds.
-             Same structure means the returned matrix would have values > 0 where m has values > 0 (1), and 0
+             Same structure means tha returned matrix would have values > 0 where m has values > 0 (1), and 0
              where m has 0. Conservative means that for each i = 1, ..., n, the sum of the ith row of
              the returned matrix is equal to the sum of the ith column of the returned matrix.
     :error: if the matrix is not binary, ValueError is raised.
@@ -279,7 +292,6 @@ def conservative_migration_from_binary_matrix(binary_m: np.ndarray, bounds: tupl
     non_zero_indices = np.argwhere(binary_m)
     num_unknowns = non_zero_indices.shape[0]
     result_matrix = np.zeros(binary_m.shape)
-    solution = None
     # build the matrix A and the vector b
     A = np.zeros((binary_m.shape[0], num_unknowns))
     b = np.zeros(binary_m.shape[0])
@@ -292,18 +304,15 @@ def conservative_migration_from_binary_matrix(binary_m: np.ndarray, bounds: tupl
     if lls:
         ls_sol = sp.optimize.lsq_linear(A, b, bounds=bounds)
         solution = ls_sol.x
-
     else:
+        x0 = np.random.uniform(bounds[0], bounds[1], num_unknowns)
+
         def obj_func(x):
             return np.linalg.norm(np.dot(A, x) - b)
 
-        while True:
-            x0 = np.random.uniform(bounds[0], bounds[1], num_unknowns)
-            minimize_sol = sp.optimize.minimize(obj_func, x0=x0, bounds=[bounds] * num_unknowns)
-            solution = minimize_sol.x
-            result_matrix[non_zero_indices[:, 0], non_zero_indices[:, 1]] = solution
-            if not np.any(solution <= 0) and check_conservative(result_matrix):
-                break
+        # build the constraints
+        minimize_sol = sp.optimize.minimize(obj_func, x0=x0, bounds=[bounds] * num_unknowns)
+        solution = minimize_sol.x
     # put the values of x in result_matrix according to the non_zero_indices
     result_matrix[non_zero_indices[:, 0], non_zero_indices[:, 1]] = solution
     return result_matrix

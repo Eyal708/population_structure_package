@@ -1,5 +1,5 @@
 Metadata-Version: 2.1
-Name: population-structure
+Name: population_structure
 Version: 1.0.0
 Summary: Added the function conservative_migration_from_binary_matrix to the helper_funcs module.This function generates a conservative migration matrix from a binary migration matrix(See documentation for more details).
 Author: Eyal Haluts
@@ -7,6 +7,9 @@ Author-email: eyal.haluts@mail.huji.ac.il
 Requires-Python: >=3.7
 Description-Content-Type: text/markdown
 License-File: LICENSE
+Requires-Dist: scipy
+Requires-Dist: importlib_resources
+Requires-Dist: numpy
 
 # Population Structure Package
 A package for performing transformation between fst, coalescence, and migration matrices.
@@ -14,7 +17,7 @@ The transformation between coalescence and migration is based on Wilkinson-Herbo
 The transformation between fst and coalescence is based on the Slatkin's equations (1991).
 ## Install package using pip
 pip install population-structure
-## Example usuage
+## Example usage:
 ```python
 import population_structure.utils as psu
 import numpy as np
@@ -36,7 +39,7 @@ prints:
 f = np.array([[0,0.1,0.2],
               [0.1,0,0.3],
               [0.2,0.3,0]]) # An fst matrix
-psu.f_to_t(f) # Generates a possilbe corresponding coalescence matrix
+psu.f_to_t(f) # Generates a possible corresponding coalescence matrix
 psu.f_to_m(f) # Generate a possible corresponding migration matrix
 ```
 

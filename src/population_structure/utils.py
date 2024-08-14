@@ -41,7 +41,7 @@ def m_to_f(m: np.ndarray) -> np.ndarray:
     Receives a migration matrix(a squared, positive matrix with zeroes on the diagonal) with any number
     of connected components, and returns its corresponding Fst matrix according to Wilkinson-Herbot's equations and
     Slatkin's equations.
-    :param m: Migration matrix- squared, positive, with zeroes on the diagonal.
+    :param m: Migration matrix - squared, positive, with zeroes on the diagonal.
     :return: Corresponding Fst matrix according to Wilkinson-Herbot's equations. If there is no solution, an error will
              occur.
     """
@@ -58,7 +58,7 @@ def m_to_t(m: np.ndarray) -> np.ndarray:
        Receives a migration matrix(a squared, positive matrix with zeroes on the diagonal) with any number
        of connected components, and returns its corresponding Coalescent times (T) matrix according to
        Wilkinson-Herbot's equations.
-       :param m: Migration matrix- squared, positive, with zeroes on the diagonal.
+       :param m: Migration matrix - squared, positive, with zeroes on the diagonal.
        :return: Corresponding T matrix according to Wilkinson-Herbot's equations. If there is no solution,
                 an error will occur.
        """
@@ -110,7 +110,8 @@ def f_to_t(f: np.ndarray, x0=None, constraint=False, bounds=(0, np.inf)) -> tupl
     return Fst_matrix.produce_coalescence(x0, constraint, bounds)
 
 
-def f_to_m(f: np.ndarray, x0=None, constraint=False, bounds_t=(0, np.inf), bounds_m=(0, 2), indirect=True) -> tuple:
+def f_to_m(f: np.ndarray, x0=None, constraint=False, bounds_t=(0, np.inf), bounds_m=(0, 2), indirect=True,
+           conservative = True) -> tuple:
     """
     Receives an Fst matrix and returns a possible corresponding migration matrix.
     Two approaches are available: the indirect approach, which first finds the coalescence matrix and then
@@ -131,6 +132,8 @@ def f_to_m(f: np.ndarray, x0=None, constraint=False, bounds_t=(0, np.inf), bound
                     is given instead, they will be the bounds for each variable.
     :param indirect: indicates whether to use the indirect approach of finding the coalescence matrix first, or the
                      direct approach of finding the migration matrix directly from the Fst matrix. default is True.
+    :param conservative: indicates whether to enforce the conservative migration constraint. default is True.
+                         This is only relevant when using the direct approach (indirect=False).
     :return: A tuple: first element is a possible corresponding migration matrix, second element is details about
                       the solution. If indirect is True, these are the details of the solution of the T->M
                       transformation which uses Linear Least Squares. Otherwise, these are the details of the numeric
@@ -139,4 +142,4 @@ def f_to_m(f: np.ndarray, x0=None, constraint=False, bounds_t=(0, np.inf), bound
     if indirect:
         T_matrix = Coalescence(f_to_t(f, x0, constraint, bounds_t)[0])
         return T_matrix.produce_migration(bounds_m)
-    return Fst(f).produce_migration(x0, bounds_m)
+    return Fst(f).produce_migration(x0, bounds_m, conservative)
